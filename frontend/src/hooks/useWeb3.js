@@ -252,7 +252,7 @@ export function useWeb3() {
     } finally {
       setTxPending(false);
     }
-  }, [signer, isOwner, fetchTenantList, fetchContractInfo]);
+  }, [signer, isAdmin, fetchTenantList, fetchContractInfo]);
 
   // ============ 7. Override Akses Pintu (Owner Only) ============
   const overrideDoor = useCallback(async (tenantAddress, lock) => {
@@ -275,7 +275,7 @@ export function useWeb3() {
     } finally {
       setTxPending(false);
     }
-  }, [signer, isOwner, fetchTenantList]);
+  }, [signer, isAdmin, fetchTenantList]);
 
   // ============ 8. Hapus Penyewa (Owner Only) ============
   const removeTenant = useCallback(async (tenantAddress) => {
@@ -297,7 +297,7 @@ export function useWeb3() {
     } finally {
       setTxPending(false);
     }
-  }, [signer, isOwner, fetchTenantList, fetchContractInfo]);
+  }, [signer, isAdmin, fetchTenantList, fetchContractInfo]);
 
   // ============ 9. Tarik Dana (Owner Only) ============
   const withdrawFunds = useCallback(async () => {
