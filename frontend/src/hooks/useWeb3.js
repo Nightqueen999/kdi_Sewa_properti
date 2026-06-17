@@ -230,7 +230,7 @@ export function useWeb3() {
   }, [signer, account, fetchLeaseStatus, fetchContractInfo]);
 
   // ============ 6. Registrasi Penyewa (Owner Only) ============
-  const registerTenant = useCallback(async (tenantAddress, name, roomNumber) => {
+  const registerTenant = useCallback(async (tenantAddress, name, roomNumber, initialDays = 0) => {
     if (!signer || !isAdmin) {
       throw new Error('Hanya admin yang bisa mendaftarkan penyewa');
     }
@@ -240,7 +240,7 @@ export function useWeb3() {
 
     try {
       const contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-      const tx = await contract.registerTenant(tenantAddress, name, roomNumber);
+      const tx = await contract.registerTenant(tenantAddress, name, roomNumber, initialDays);
       await tx.wait();
 
       await Promise.all([fetchTenantList(), fetchContractInfo()]);
@@ -255,7 +255,7 @@ export function useWeb3() {
   }, [signer, isAdmin, fetchTenantList, fetchContractInfo]);
 
   // ============ 7. Override Akses Pintu (Owner Only) ============
-  const overrideDoor = useCallback(async (tenantAddress, lock) => {
+  const overrideDoor = useCallback(async (tenantAddress, lock, additionalDays = 0) => {
     if (!signer || !isAdmin) {
       throw new Error('Hanya admin yang bisa mengontrol akses');
     }
@@ -263,7 +263,7 @@ export function useWeb3() {
     setTxPending(true);
     try {
       const contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-      const tx = await contract.overrideDoorAccess(tenantAddress, lock);
+      const tx = await contract.overrideDoorAccess(tenantAddress, lock, additionalDays);
       await tx.wait();
 
       await fetchTenantList();

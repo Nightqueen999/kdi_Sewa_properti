@@ -106,22 +106,28 @@ contract DigitalLease {
      * @param _tenant Alamat wallet penyewa
      * @param _name Nama penyewa
      * @param _roomNumber Nomor kamar
+     * @param _initialDays Durasi akses gratis awal dalam hari
      */
     function registerTenant(
         address _tenant,
         string calldata _name,
-        uint256 _roomNumber
+        uint256 _roomNumber,
+        uint256 _initialDays
     ) external onlyAdmin {
         require(!tenants[_tenant].isRegistered, "Penyewa sudah terdaftar");
         require(_tenant != address(0), "Alamat tidak valid");
+
+        uint256 startTime = _initialDays > 0 ? block.timestamp : 0;
+        uint256 endTime = _initialDays > 0 ? block.timestamp + (_initialDays * 1 days) : 0;
+        bool active = _initialDays > 0;
 
         tenants[_tenant] = Tenant({
             wallet: _tenant,
             name: _name,
             roomNumber: _roomNumber,
-            leaseStart: 0,
-            leaseEnd: 0,
-            isActive: false,
+            leaseStart: startTime,
+            leaseEnd: endTime,
+            isActive: active,
             isRegistered: true,
             totalPaid: 0,
             totalPenalties: 0
@@ -129,6 +135,10 @@ contract DigitalLease {
 
         tenantList.push(_tenant);
         emit TenantRegistered(_tenant, _name, _roomNumber);
+
+        if (active) {
+            emit DoorAccessOverride(_tenant, false);
+        }
     }
 
     /**
@@ -155,20 +165,24 @@ contract DigitalLease {
     }
 
     /**
-     * @dev Override kontrol akses pintu oleh pemilik
+     * @dev Admin dapat melakukan override terhadap akses pintu (membuka/mengunci manual)
      * @param _tenant Alamat wallet penyewa
-     * @param _lock true = kunci, false = buka
+     * @param _lock True = Kunci pintu, False = Buka pintu
+     * @param _additionalDays Jumlah hari tambahan akses jika membuka pintu
      */
-    function overrideDoorAccess(address _tenant, bool _lock) external onlyAdmin {
+    function overrideDoorAccess(address _tenant, bool _lock, uint256 _additionalDays) external onlyAdmin {
         require(tenants[_tenant].isRegistered, "Penyewa tidak ditemukan");
         
-        if (_lock) {
-            tenants[_tenant].isActive = false;
-            emit LeaseExpired(_tenant);
-        } else {
-            tenants[_tenant].isActive = true;
-        }
+        tenants[_tenant].isActive = !_lock;
         
+        if (!_lock) {
+            if (_additionalDays > 0) {
+                tenants[_tenant].leaseEnd = block.timestamp + (_additionalDays * 1 days);
+            }
+        } else {
+            tenants[_tenant].leaseEnd = 0;
+        }
+
         emit DoorAccessOverride(_tenant, _lock);
     }
 
@@ -258,7 +272,7 @@ contract DigitalLease {
         }
 
         // Cek apakah sewa sudah melewati jatuh tempo
-        bool active = tenant.isActive && block.timestamp <= tenant.leaseEnd;
+        bool active = tenant.isActive && (tenant.leaseEnd == 0 || block.timestamp <= tenant.leaseEnd);
         return (active, tenant.leaseEnd);
     }
 

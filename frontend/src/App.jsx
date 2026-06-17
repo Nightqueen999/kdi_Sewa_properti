@@ -1,10 +1,32 @@
 import { useState } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
+import React from 'react';
 import { useWeb3 } from './hooks/useWeb3';
 import Navbar from './components/Navbar';
 import LandingHero from './components/LandingHero';
 import TenantPortal from './components/TenantPortal';
 import LandlordDashboard from './components/LandlordDashboard';
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '20px', color: 'red', background: '#333' }}>
+          <h2>Something went wrong in TenantPortal.</h2>
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{this.state.error && this.state.error.toString()}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   const web3 = useWeb3();
@@ -22,19 +44,19 @@ export default function App() {
     }
   };
 
-  const handleRegister = async (addr, name, room) => {
+  const handleRegister = async (addr, name, room, initialDays) => {
     try {
-      await web3.registerTenant(addr, name, room);
-      toast.success(`✅ ${name} berhasil didaftarkan!`, { style: { background: '#1e293b', color: '#fff', border: '1px solid rgba(16,185,129,0.3)' } });
+      await web3.registerTenant(addr, name, room, initialDays);
+      toast.success('🎉 Penyewa berhasil didaftarkan!', { style: { background: '#1e293b', color: '#fff', border: '1px solid rgba(16,185,129,0.3)' } });
     } catch (err) {
       toast.error(err.reason || err.message || 'Gagal mendaftarkan penyewa', { style: { background: '#1e293b', color: '#fff', border: '1px solid rgba(239,68,68,0.3)' } });
     }
   };
 
-  const handleOverrideDoor = async (addr, lock) => {
+  const handleOverrideDoor = async (addr, lock, additionalDays = 0) => {
     try {
-      await web3.overrideDoor(addr, lock);
-      toast.success(lock ? '🔒 Pintu dikunci' : '🔓 Pintu dibuka', { style: { background: '#1e293b', color: '#fff', border: '1px solid rgba(99,102,241,0.3)' } });
+      await web3.overrideDoor(addr, lock, additionalDays);
+      toast.success(lock ? '🚪 Pintu dikunci manual' : '🚪 Pintu dibuka manual', { style: { background: '#1e293b', color: '#fff', border: '1px solid rgba(99,102,241,0.3)' } });
     } catch (err) {
       toast.error(err.reason || err.message || 'Gagal mengubah akses', { style: { background: '#1e293b', color: '#fff', border: '1px solid rgba(239,68,68,0.3)' } });
     }
@@ -99,17 +121,19 @@ export default function App() {
           error={web3.error}
         />
       ) : (
-        <TenantPortal
-          account={web3.account}
-          leaseStatus={web3.leaseStatus}
-          tenantDetails={web3.tenantDetails}
-          contractInfo={web3.contractInfo}
-          currentPenalty={web3.currentPenalty}
-          txPending={web3.txPending}
-          onPayRent={handlePayRent}
-          error={web3.error}
-          dataLoaded={web3.dataLoaded}
-        />
+        <ErrorBoundary>
+          <TenantPortal
+            account={web3.account}
+            leaseStatus={web3.leaseStatus}
+            tenantDetails={web3.tenantDetails}
+            contractInfo={web3.contractInfo}
+            currentPenalty={web3.currentPenalty}
+            txPending={web3.txPending}
+            onPayRent={handlePayRent}
+            error={web3.error}
+            dataLoaded={web3.dataLoaded}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Footer */}

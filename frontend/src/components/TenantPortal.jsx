@@ -58,14 +58,10 @@ export default function TenantPortal({
     show: { opacity: 1, y: 0 },
   };
 
-  // Loading state — data belum selesai di-fetch dari blockchain
+  // Loading state
   if (!dataLoaded) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="max-w-2xl mx-auto mt-12 px-4"
-      >
+      <div className="max-w-2xl mx-auto mt-12 px-4">
         <div className="glass-card p-8 text-center">
           <svg className="animate-spin w-10 h-10 mx-auto mb-4 text-primary-400" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -74,17 +70,13 @@ export default function TenantPortal({
           <h2 className="text-xl font-semibold text-white mb-2">Memuat Data...</h2>
           <p className="text-surface-400 text-sm">Mengambil data sewa dari blockchain Sepolia</p>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   if (!isRegistered) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-2xl mx-auto mt-12 px-4"
-      >
+      <div className="max-w-2xl mx-auto mt-12 px-4">
         <div className="glass-card p-8 text-center">
           <div className="text-6xl mb-4">🏠</div>
           <h2 className="text-2xl font-bold text-white mb-2">Belum Terdaftar</h2>
@@ -96,19 +88,14 @@ export default function TenantPortal({
             <span className="text-sm font-mono text-primary-400">{formatAddress(account)}</span>
           </div>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-      className="max-w-5xl mx-auto px-4 py-8 space-y-6"
-    >
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-white">
             Selamat datang, <span className="gradient-text">{tenantDetails?.name || 'Penyewa'}</span> 👋
@@ -120,10 +107,10 @@ export default function TenantPortal({
         <div className={isActive ? 'badge-active' : 'badge-expired'}>
           {isActive ? '✅ Sewa Aktif' : '❌ Sewa Tidak Aktif'}
         </div>
-      </motion.div>
+      </div>
 
       {/* Stats Row */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="stat-card">
           <span className="stat-label">Biaya Sewa</span>
           <span className="stat-value text-primary-400">{parseFloat(rentAmountEth).toFixed(4)}</span>
@@ -146,16 +133,16 @@ export default function TenantPortal({
           </span>
           <span className="text-xs text-surface-500">{hasPenalty ? 'ETH (harus dibayar)' : 'Tidak ada denda'}</span>
         </div>
-      </motion.div>
+      </div>
 
       {/* Countdown & Door Status */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CountdownTimer endTimestamp={endTime} isActive={isActive} />
         <DoorStatus isActive={isActive} isRegistered={isRegistered} />
-      </motion.div>
+      </div>
 
       {/* Payment Section */}
-      <motion.div variants={itemVariants} className="glass-card p-6">
+      <div className="glass-card p-6">
         <h3 className="text-lg font-semibold text-white mb-4">💳 Pembayaran Sewa</h3>
         
         <div className="space-y-3 mb-6">
@@ -191,10 +178,8 @@ export default function TenantPortal({
         )}
 
         {/* Pay Button */}
-        <motion.button
+        <button
           id="btn-pay-rent"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
           onClick={handlePay}
           disabled={txPending}
           className={`w-full ${hasPenalty ? 'btn-danger' : 'btn-success'} text-lg py-4 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50`}
@@ -215,12 +200,12 @@ export default function TenantPortal({
               {hasPenalty ? `Bayar Sewa + Denda (${parseFloat(totalDueEth).toFixed(4)} ETH)` : `Bayar Sewa (${parseFloat(rentAmountEth).toFixed(4)} ETH)`}
             </>
           )}
-        </motion.button>
+        </button>
 
         <p className="text-[10px] text-surface-500 text-center mt-3">
           Transaksi akan dikonfirmasi melalui MetaMask. Gas fee tambahan berlaku.
         </p>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }

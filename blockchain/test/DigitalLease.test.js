@@ -59,7 +59,7 @@ describe("DigitalLease", function () {
   describe("Registrasi Penyewa", function () {
     it("Owner bisa mendaftarkan penyewa", async function () {
       await expect(
-        digitalLease.registerTenant(tenant1.address, "Ahmad", 101)
+        digitalLease.registerTenant(tenant1.address, "Ahmad", 101, 0)
       ).to.emit(digitalLease, "TenantRegistered")
         .withArgs(tenant1.address, "Ahmad", 101);
 
@@ -71,21 +71,21 @@ describe("DigitalLease", function () {
 
     it("Non-owner tidak bisa mendaftarkan penyewa", async function () {
       await expect(
-        digitalLease.connect(tenant1).registerTenant(tenant2.address, "Budi", 102)
+        digitalLease.connect(tenant1).registerTenant(tenant2.address, "Budi", 102, 0)
       ).to.be.revertedWith("Hanya admin yang diizinkan");
     });
 
     it("Tidak bisa mendaftarkan penyewa yang sudah terdaftar", async function () {
-      await digitalLease.registerTenant(tenant1.address, "Ahmad", 101);
+      await digitalLease.registerTenant(tenant1.address, "Ahmad", 101, 0);
       await expect(
-        digitalLease.registerTenant(tenant1.address, "Ahmad", 101)
+        digitalLease.registerTenant(tenant1.address, "Ahmad", 101, 0)
       ).to.be.revertedWith("Penyewa sudah terdaftar");
     });
   });
 
-  describe("Pembayaran Sewa", function () {
+  describe("IoT Door Access", function () {
     beforeEach(async function () {
-      await digitalLease.registerTenant(tenant1.address, "Ahmad", 101);
+      await digitalLease.registerTenant(tenant1.address, "Ahmad", 101, 0);
     });
 
     it("Penyewa bisa membayar sewa", async function () {
@@ -125,9 +125,9 @@ describe("DigitalLease", function () {
     });
   });
 
-  describe("Denda Keterlambatan", function () {
+  describe("Update Sewa & Penarikan", function () {
     beforeEach(async function () {
-      await digitalLease.registerTenant(tenant1.address, "Ahmad", 101);
+      await digitalLease.registerTenant(tenant1.address, "Ahmad", 101, 0);
       await digitalLease.connect(tenant1).payRent({ value: RENT_AMOUNT });
     });
 
@@ -168,7 +168,7 @@ describe("DigitalLease", function () {
 
   describe("Kontrol Akses Pintu (Owner Override)", function () {
     beforeEach(async function () {
-      await digitalLease.registerTenant(tenant1.address, "Ahmad", 101);
+      await digitalLease.registerTenant(tenant1.address, "Ahmad", 101, 0);
       await digitalLease.connect(tenant1).payRent({ value: RENT_AMOUNT });
     });
 
@@ -194,7 +194,7 @@ describe("DigitalLease", function () {
 
   describe("Penarikan Dana", function () {
     it("Owner bisa menarik dana dari kontrak", async function () {
-      await digitalLease.registerTenant(tenant1.address, "Ahmad", 101);
+      await digitalLease.registerTenant(tenant1.address, "Ahmad", 101, 0);
       await digitalLease.connect(tenant1).payRent({ value: RENT_AMOUNT });
 
       const balanceBefore = await ethers.provider.getBalance(owner.address);
@@ -210,7 +210,7 @@ describe("DigitalLease", function () {
 
   describe("Status Sewa Expired", function () {
     it("isActive false setelah jatuh tempo", async function () {
-      await digitalLease.registerTenant(tenant1.address, "Ahmad", 101);
+      await digitalLease.registerTenant(tenant1.address, "Ahmad", 101, 0);
       await digitalLease.connect(tenant1).payRent({ value: RENT_AMOUNT });
 
       // Lewati 31 hari

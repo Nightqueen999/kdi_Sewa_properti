@@ -9,7 +9,7 @@ export default function LandlordDashboard({
 }) {
   const [showForm, setShowForm] = useState(false);
   const [showAdminForm, setShowAdminForm] = useState(false);
-  const [newTenant, setNewTenant] = useState({ address: '', name: '', roomNumber: '' });
+  const [newTenant, setNewTenant] = useState({ address: '', name: '', roomNumber: '', initialDays: 0 });
   const [newAdmin, setNewAdmin] = useState('');
 
   const balanceEth = contractInfo?.balance ? formatEther(contractInfo.balance) : '0';
@@ -19,8 +19,8 @@ export default function LandlordDashboard({
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await onRegisterTenant(newTenant.address, newTenant.name, parseInt(newTenant.roomNumber));
-      setNewTenant({ address: '', name: '', roomNumber: '' });
+      await onRegisterTenant(newTenant.address, newTenant.name, parseInt(newTenant.roomNumber), Number(newTenant.initialDays) || 0);
+      setNewTenant({ address: '', name: '', roomNumber: '', initialDays: 0 });
       setShowForm(false);
     } catch (err) {}
   };
@@ -62,7 +62,7 @@ export default function LandlordDashboard({
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
             <form onSubmit={handleRegister} className="glass-card p-6">
               <h3 className="text-lg font-semibold text-white mb-4">📝 Registrasi Penyewa Baru</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4">
                 <div>
                   <label className="block text-xs text-surface-400 mb-1.5 uppercase tracking-wider">Alamat Wallet</label>
                   <input id="input-tenant-address" type="text" placeholder="0x..." value={newTenant.address} onChange={(e) => setNewTenant({ ...newTenant, address: e.target.value })} className="input-field font-mono text-sm" required />
@@ -74,6 +74,10 @@ export default function LandlordDashboard({
                 <div>
                   <label className="block text-xs text-surface-400 mb-1.5 uppercase tracking-wider">Nomor Kamar</label>
                   <input id="input-room-number" type="number" placeholder="101" value={newTenant.roomNumber} onChange={(e) => setNewTenant({ ...newTenant, roomNumber: e.target.value })} className="input-field text-sm" required min="1" />
+                </div>
+                <div>
+                  <label className="block text-xs text-surface-400 mb-1.5 uppercase tracking-wider">Akses Awal (Hari)</label>
+                  <input id="input-initial-days" type="number" placeholder="0" value={newTenant.initialDays} onChange={(e) => setNewTenant({ ...newTenant, initialDays: e.target.value })} className="input-field text-sm" min="0" />
                 </div>
               </div>
               {error && <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20"><p className="text-sm text-red-400">{error}</p></div>}
@@ -128,7 +132,23 @@ export default function LandlordDashboard({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => onOverrideDoor(tenant.address, !tenant.isActive)} disabled={txPending} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-50 ${tenant.isActive ? 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20' : 'bg-accent-500/10 text-accent-400 border border-accent-500/20 hover:bg-accent-500/20'}`}>{tenant.isActive ? '🔒 Kunci' : '🔓 Buka'}</button>
+                    <button onClick={() => {
+                      if (tenant.isActive) {
+                        if (confirm(`Kunci pintu untuk ${tenant.name} sekarang? Waktu sewa akan direset.`)) {
+                          onOverrideDoor(tenant.address, true, 0);
+                        }
+                      } else {
+                        const days = prompt(`Berapa hari akses yang ingin diberikan untuk ${tenant.name}?`, "1");
+                        if (days !== null) {
+                          const parsedDays = parseInt(days);
+                          if (!isNaN(parsedDays) && parsedDays > 0) {
+                            onOverrideDoor(tenant.address, false, parsedDays);
+                          } else {
+                            alert("Masukkan jumlah hari yang valid!");
+                          }
+                        }
+                      }
+                    }} disabled={txPending} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-50 ${tenant.isActive ? 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20' : 'bg-accent-500/10 text-accent-400 border border-accent-500/20 hover:bg-accent-500/20'}`}>{tenant.isActive ? '🔒 Kunci' : '🔓 Buka'}</button>
                     <button onClick={() => { if (confirm(`Hapus ${tenant.name}?`)) onRemoveTenant(tenant.address); }} disabled={txPending} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-800/50 text-surface-400 border border-surface-700/30 hover:text-red-400 hover:border-red-500/30 transition-all disabled:opacity-50">🗑️</button>
                   </div>
                 </div>
